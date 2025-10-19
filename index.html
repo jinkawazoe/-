@@ -55,6 +55,8 @@
       button.secondary{border-color:var(--line);color:var(--ink)}
       button[disabled]{opacity:.6;cursor:not-allowed}
       .result{display:none;border-top:1px solid var(--line);padding-top:12px}
+      /* 診断（グラフ等）は送信後に表示 */
+      #diagnosis{display:none}
       .badge{display:inline-block;border:1px solid #111;border-radius:999px;padding:6px 10px;font-size:.82rem;font-weight:700}
       .subtitle{color:var(--muted);margin:6px 0 0}
       .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
@@ -111,10 +113,7 @@
           <div class="en">Store Design Diagnose</div>
           <div class="jp">店舗デザインタイプ診断</div>
           <div class="sub">建築家の視点で選ぶ参考ビジュアル（Click to open source）
-            <span class="switch"><input id="dm" type="checkbox" /> ダーク</span>
-            <span class="switch">モード
-              <select id="mode" class="mode"><option value="light" selected>軽量</option><option value="standard">標準</option><option value="heavy">大量</option></select>
-            </span>
+            
             <button id="share" class="secondary">共有</button>
             <button id="pdf" class="secondary">PDF</button>
           </div>
@@ -346,9 +345,19 @@
             setHero(sel);
             await renderImages(sel);
             // 診断（下部のグラフ・所見）も最新の選択に同期
-            try { if(typeof updateDiagnosisFromForm === 'function') updateDiagnosisFromForm(); } catch(_) {}
+            try { if(typeof enableDiagnosis === 'function') enableDiagnosis(); } catch(_) {}
           });
-          resetBtn.addEventListener('click',()=>{ form.reset(); progress(); result.style.display='none'; result.innerHTML=''; document.querySelectorAll('.question.error').forEach(el=>el.classList.remove('error')); });
+          resetBtn.addEventListener('click',()=>{
+            form.reset();
+            progress();
+            result.style.display='none';
+            result.innerHTML='';
+            const diag = document.getElementById('diagnosis');
+            if(diag) diag.style.display='none';
+            diagnosisEnabled = false;
+            clearDiagnosis();
+            document.querySelectorAll('.question.error').forEach(el=>el.classList.remove('error'));
+          });
           progress();
           // 初期ヒーロー画像
           setHero(null);
@@ -567,6 +576,7 @@
           };
 
           let budgetChart, effectChart;
+          let diagnosisEnabled = false;
 
           function renderScenario(key){
             const sc = SCENARIOS[key] || SCENARIOS.low;
@@ -688,14 +698,22 @@
             if(key){ renderScenario(key); } else { clearDiagnosis(); }
           }
           // 初期化（フォームの選択に追従）
-          (function initDiagnosis(){
+          function enableDiagnosis(){
+            if(diagnosisEnabled) return;
+            diagnosisEnabled = true;
             const frm = document.getElementById('form');
+            const diag = document.getElementById('diagnosis');
+            if(diag) diag.style.display = 'block';
             if(frm){
               frm.addEventListener('change', updateDiagnosisFromForm);
-              frm.addEventListener('reset', ()=> setTimeout(clearDiagnosis, 0));
+              frm.addEventListener('reset', ()=> setTimeout(()=>{
+                clearDiagnosis();
+                if(diag) diag.style.display = 'none';
+                diagnosisEnabled = false;
+              }, 0));
             }
             updateDiagnosisFromForm();
-          })();
+          }
         </script>
       </main>
     </div>
