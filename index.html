@@ -104,12 +104,13 @@
       }
       /* iPhone/small width: take taller hero height so title fits */
       @media (max-width:480px){
-        .hero{aspect-ratio:auto}
-        .hero::after{padding-top:62%}
+        .hero{aspect-ratio:auto; min-height:260px}
+        .hero::after{padding-top:70%}
         .hero-title{left:12px;bottom:12px;max-width:94%}
       }
       @media (max-width:360px){
-        .hero::after{padding-top:68%}
+        .hero{min-height:280px}
+        .hero::after{padding-top:78%}
       }
     </style>
   </head>
@@ -589,8 +590,98 @@
           let budgetChart, effectChart;
           let diagnosisEnabled = false;
 
+          function getCurrentSel(){
+            try{
+              if(typeof names !== 'undefined' && typeof getSel === 'function'){
+                const sel = Object.fromEntries(names.map(n=>[n, getSel(n)]));
+                sel.facade = document.querySelector('input[name="facade"]:checked')?.value || sel.facade || null;
+                return sel;
+              }
+            }catch(_){ }
+            const fields=['biz','aud','mood','budget','size','persona','sustain','bgm','tone','layout','focal','facade'];
+            const sel={};
+            fields.forEach(n=>{ sel[n] = document.querySelector(`input[name="${n}"]:checked`)?.value || null; });
+            return sel;
+          }
+
+          function containsAny(v, arr){ const s=(v||'').toString().toLowerCase(); return arr.some(k=>s.includes(k)); }
+
+          function adjustScenario(base, sel){
+            const clone = (obj)=> JSON.parse(JSON.stringify(obj));
+            const sc = clone(base);
+            const allocFactors = { facade:1, lighting:1, fixtures:1, ops:1, other:1 };
+            let totalFactor = 1;
+            let savingsFactor = 1, upliftFactor = 1, extraCostFactor = 1;
+
+            const biz = sel?.biz||''; const mood=sel?.mood||''; const layout=sel?.layout||''; const focal=sel?.focal||''; const facade=sel?.facade||''; const tone=sel?.tone||''; const size=sel?.size||''; const persona=sel?.persona||''; const sustain=sel?.sustain||'';
+
+            // Biz type
+            if(containsAny(biz,['カフェ','cafe'])){ allocFactors.facade+=.10; allocFactors.lighting+=.10; allocFactors.fixtures-=.05; allocFactors.ops-=.05; upliftFactor+=.05; }
+            if(containsAny(biz,['レストラン','restaurant'])){ allocFactors.ops+=.10; allocFactors.fixtures+=.05; allocFactors.lighting-=.05; }
+            if(containsAny(biz,['美容','理容','hair','salon'])){ allocFactors.lighting+=.15; allocFactors.fixtures+=.05; allocFactors.ops-=.05; }
+            if(containsAny(biz,['アパレル','小売','retail','boutique'])){ allocFactors.fixtures+=.15; allocFactors.facade+=.05; }
+
+            // Mood
+            if(containsAny(mood,['クラシック','classic'])){ totalFactor+=.10; allocFactors.fixtures+=.05; allocFactors.other+=.05; }
+            if(containsAny(mood,['インダストリアル','industrial'])){ allocFactors.fixtures+=.05; allocFactors.other+=.05; }
+            if(containsAny(mood,['北欧','scandinavian'])){ allocFactors.lighting+=.05; }
+            if(containsAny(mood,['ナチュラル','natural'])){ allocFactors.fixtures+=.05; }
+
+            // Layout
+            if(containsAny(layout,['オープン','open'])){ allocFactors.fixtures+=.10; }
+            if(containsAny(layout,['個室','private'])){ allocFactors.ops+=.10; }
+            if(containsAny(layout,['カウンター','counter'])){ allocFactors.ops+=.05; allocFactors.fixtures-=.05; }
+            if(containsAny(layout,['ブース','booth'])){ allocFactors.fixtures+=.05; }
+
+            // Focal point
+            if(containsAny(focal,['照明','light'])){ allocFactors.lighting+=.10; }
+            if(containsAny(focal,['グリーン','plant','green'])){ allocFactors.other+=.07; }
+            if(containsAny(focal,['アート','art'])){ allocFactors.other+=.07; }
+            if(containsAny(focal,['壁','wall'])){ allocFactors.facade+=.07; }
+
+            // Facade spec
+            if(containsAny(facade,['ガラス','glass'])){ allocFactors.facade+=.20; totalFactor+=.05; extraCostFactor+=.05; }
+            if(containsAny(facade,['木','wood'])){ allocFactors.facade+=.10; }
+            if(containsAny(facade,['スチール','steel'])){ allocFactors.facade+=.15; }
+            if(containsAny(facade,['サイン','sign'])){ allocFactors.other+=.10; upliftFactor+=.05; }
+
+            // Tone
+            if(containsAny(tone,['暖','warm'])){ allocFactors.lighting+=.05; }
+            if(containsAny(tone,['寒','cool'])){ allocFactors.lighting-=.03; }
+            if(containsAny(tone,['モノ','mono','black','white'])){ allocFactors.fixtures+=.03; }
+
+            // Size
+            if(containsAny(size,['小','small',' s '])){ totalFactor-=.10; }
+            if(containsAny(size,['大','large',' l '])){ totalFactor+=.20; }
+
+            // Persona
+            if(containsAny(persona,['富裕','luxury','rich'])){ totalFactor+=.10; allocFactors.facade+=.05; allocFactors.fixtures+=.05; upliftFactor+=.10; }
+            if(containsAny(persona,['学生','student'])){ totalFactor-=.05; allocFactors.other-=.02; }
+            if(containsAny(persona,['ファミ','family'])){ allocFactors.ops+=.05; }
+
+            // Sustainability
+            if(containsAny(sustain,['重視','high','eco','sustain'])){ allocFactors.ops+=.05; savingsFactor+=.15; upliftFactor+=.05; extraCostFactor+=.10; }
+
+            // Apply to allocations and effects
+            const baseTotal = sc.budget;
+            const nextTotal = Math.max(1, Math.round(baseTotal * totalFactor));
+            let weighted = sc.allocations.map(a=>({ key:a.key, label:a.label, color:a.color, base:a.amount, w:a.amount * (allocFactors[a.key]||1) }));
+            const sumW = weighted.reduce((s,a)=>s+a.w,0) || 1;
+            weighted = weighted.map(a=>({ ...a, amount: Math.max(0, Math.round(a.w * nextTotal / sumW)) }));
+            sc.budget = nextTotal;
+            sc.allocations = weighted.map(a=>({ key:a.key, label:a.label, amount:a.amount, color:a.color }));
+            sc.effects = {
+              savings: Math.round(sc.effects.savings * savingsFactor),
+              uplift: Math.round(sc.effects.uplift * upliftFactor),
+              extra_cost: Math.round(sc.effects.extra_cost * extraCostFactor)
+            };
+            return sc;
+          }
+
           function renderScenario(key){
-            const sc = SCENARIOS[key] || SCENARIOS.low;
+            const base = SCENARIOS[key] || SCENARIOS.low;
+            const sel = getCurrentSel();
+            const sc = adjustScenario(base, sel);
             const total = sc.budget;
             const allocations = sc.allocations;
 
@@ -716,13 +807,19 @@
             const diag = document.getElementById('diagnosis');
             if(diag) diag.style.display = 'block';
             if(frm){
-              frm.addEventListener('change', updateDiagnosisFromForm);
+              const onFormChange = ()=>{
+                updateDiagnosisFromForm();
+                try{ const sel = getCurrentSel(); setHero(sel); renderImages(sel); }catch(_){ }
+              };
+              frm.addEventListener('change', onFormChange);
               frm.addEventListener('reset', ()=> setTimeout(()=>{
                 clearDiagnosis();
                 if(diag) diag.style.display = 'none';
                 diagnosisEnabled = false;
               }, 0));
             }
+            // initial sync
+            try{ const sel = getCurrentSel(); setHero(sel); renderImages(sel); }catch(_){ }
             updateDiagnosisFromForm();
           }
         </script>
