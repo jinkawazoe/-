@@ -823,7 +823,38 @@
             updateDiagnosisFromForm();
           }
         </script>
-      </main>
+  </main>
     </div>
+    <script>
+      // 共有ボタン: Web Share or クリップボード
+      (function(){
+        var s = document.getElementById('share'); if(!s) return;
+        s.addEventListener('click', function(e){
+          e.preventDefault();
+          var data = { title: document.title, url: location.href };
+          if(navigator.share){ navigator.share(data).catch(function(){}); }
+          else if(navigator.clipboard && navigator.clipboard.writeText){
+            navigator.clipboard.writeText(location.href).then(function(){ alert('URLをコピーしました'); }).catch(function(){ prompt('URLをコピーしてください', location.href); });
+          } else {
+            prompt('URLをコピーしてください', location.href);
+          }
+        });
+      })();
+      // PDFボタン: 診断結果が出ていれば印刷
+      (function(){
+        var p = document.getElementById('pdf'); if(!p) return;
+        p.addEventListener('click', function(e){
+          e.preventDefault();
+          var res = document.getElementById('result');
+          var diag = document.getElementById('diagnosis');
+          if(!res || res.style.display==='none' || (diag && diag.style.display==='none')){
+            alert('先に「診断する」を完了してください。');
+            return;
+          }
+          try{ window.scrollTo({ top: (res.offsetTop||0)-10, behavior:'smooth' }); }catch(_){ }
+          setTimeout(function(){ window.print(); }, 300);
+        });
+      })();
+    </script>
   </body>
 </html>
