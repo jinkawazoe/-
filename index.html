@@ -82,6 +82,22 @@
       .dark .chip{background:#0b1020;color:#e5eaf3;border-color:#1f2535}
       .dark .gi{background:#0f162a;border-color:#1f2535}
       @media print{header,.progress,.actions,.switch,#share{display:none!important}body{background:#fff}.container{max-width:100%;padding:0 16px}.card,.tile{box-shadow:none;border-color:#ddd}.gallery{grid-template-columns:1fr 1fr 1fr}.gallery .gi:nth-child(n+7){display:none!important}}
+
+      /* Responsive tweaks */
+      #budgetChart,#effectChart{max-width:100%;height:auto}
+      @media (max-width:720px){
+        .container{padding:16px 12px 64px}
+        .actions button{width:100%}
+        .board{grid-template-columns:1fr}
+        .gallery{grid-template-columns:1fr}
+        /* Collapse common inline 2-col grids */
+        [style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important}
+        /* Slightly adjust hero title sizes */
+        .hero-title .jp{font-size:clamp(1.05rem,2vw+.6rem,1.3rem)}
+        .hero-title .en{font-size:.9rem}
+        /* Prevent table overflow within diagnosis card */
+        #diagnosis{overflow-x:auto}
+      }
     </style>
   </head>
   <body>
@@ -447,7 +463,7 @@
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:start">
               <div>
                 <h3 style="margin:0 0 6px">予算配分</h3>
-                <canvas id="budgetChart" width="420" height="240"></canvas>
+                <canvas id="budgetChart"></canvas>
                 <div id="budgetNote" class="hint" style="margin-top:6px"></div>
                 <table style="margin-top:8px; width:100%; border-collapse:collapse">
                   <thead>
@@ -469,7 +485,7 @@
               </div>
               <div>
                 <h3 style="margin:0 0 6px">期待効果</h3>
-                <canvas id="effectChart" width="420" height="260"></canvas>
+                <canvas id="effectChart"></canvas>
                 <div id="effectNote" class="hint" style="margin-top:6px"></div>
               </div>
             </div>
