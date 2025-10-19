@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>蠎苓・繝・じ繧､繝ｳ繧ｿ繧､繝苓ｨｺ譁ｭ</title>
+    <style>
+      :root {
+        --bg: #f6f7fb;
+        --card: #ffffff;
+        --fg: #111827;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --accent: #3b82f6;
+        --accent-soft: #eff6ff;
+        --accent-ink: #1e3a8a;
+        --shadow: 0 8px 24px rgba(0,0,0,0.08);
+        --radius: 14px;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", Arial, "Yu Gothic UI", "Meiryo", sans-serif;
+        color: var(--fg);
+        background: linear-gradient(180deg, #f7fafc, #eef2f7);
+      }
+      .container { max-width: 820px; margin: 0 auto; padding: 20px 16px 64px; }
+      header { text-align: center; margin: 12px 0 20px; }
+      h1 { font-size: 1.5rem; margin: 0 0 8px; letter-spacing: .02em; }
+      p.lead { color: var(--muted); margin: 0; font-size: .95rem; }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+      .stack { display: grid; gap: 16px; }
+
+      .question h2 { font-size: 1rem; margin: 0 0 8px; }
+      .hint { color: var(--muted); font-size: .9rem; margin-bottom: 8px; }
+
+      .options { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0,1fr)); }
+      @media (max-width: 680px) {
+        .options { grid-template-columns: 1fr; }
+      }
+
+      .option-wrap { position: relative; }
+      .option-wrap input[type=radio] {
+        position: absolute; inset: 0; opacity: 0; pointer-events: none; /* keep focus but hide */
+      }
+      .option {
+        display: flex; align-items: center; justify-content: center;
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        padding: 14px 12px;
+        font-weight: 600;
+        color: #1f2937;
+        background: #ffffff;
+        transition: border-color .2s, background .2s, transform .02s;
+        min-height: 48px;
+      }
+      .option:hover { border-color: #cbd5e1; }
+      .option:active { transform: scale(0.995); }
+      .option-wrap input[type=radio]:focus + .option { outline: 2px solid #93c5fd; outline-offset: 2px; }
+      .option-wrap input[type=radio]:checked + .option {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: var(--accent-ink);
+      }
+
+      .actions { display: flex; gap: 12px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+      button {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: #111827;
+        color: #fff;
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform .04s ease, opacity .2s ease, background .2s;
+        min-width: 180px;
+      }
+      button:hover { background: #0f172a; }
+      button:active { transform: translateY(1px); }
+      button.secondary { background: #ffffff; color: #111827; }
+      button[disabled] { opacity: .6; cursor: not-allowed; }
+
+      .result {
+        display: none;
+        border-top: 1px dashed #e2e8f0;
+        padding-top: 12px;
+      }
+      .badge {
+        display: inline-block; font-weight: 700; letter-spacing: .02em;
+        padding: 8px 12px; border-radius: 999px; background: #111827; color: #fff; font-size: .9rem;
+      }
+      .subtitle { color: var(--muted); margin: 6px 0 0; }
+      .bullets { margin: 10px 0 0; padding-left: 1.1rem; }
+      .bullets li { margin: 6px 0; }
+
+      .palette { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+      .chip {
+        display: inline-flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 999px; border: 1px solid var(--border); background: #fff;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: .85rem;
+      }
+      .swatch { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(0,0,0,.1); box-shadow: inset 0 0 0 1px rgba(255,255,255,.4); }
+
+      footer { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 16px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>蠎苓・繝・じ繧､繝ｳ繧ｿ繧､繝苓ｨｺ譁ｭ</h1>
+        <p class="lead">3縺､縺ｮ雉ｪ蝠上↓遲斐∴繧九□縺代ゅ≠縺ｪ縺溘・縺雁ｺ励↓蜷医≧遨ｺ髢薙ユ繧､繧ｹ繝医→繝偵Φ繝医ｒ謠先｡医＠縺ｾ縺吶・/p>
+      </header>
+
+      <main class="stack">
+        <form id="diag-form" class="card stack" autocomplete="off">
+          <section class="question">
+            <h2>1. 縺ゅ↑縺溘′髢区･ｭ莠亥ｮ壹・縺雁ｺ励・讌ｭ遞ｮ縺ｯ・・/h2>
+            <div class="hint">縺・■縺ｰ繧楢ｿ代＞繧ゅ・繧帝∈繧薙〒縺上□縺輔＞縲・/div>
+            <div class="options" role="radiogroup" aria-label="讌ｭ遞ｮ">
+              <label class="option-wrap">
+                <input type="radio" name="biz" value="繧ｫ繝輔ぉ" />
+                <div class="option">繧ｫ繝輔ぉ</div>
+              </label>
+              <label class="option-wrap">
+                <input type="radio" name="biz" value="鄒主ｮｹ螳､" />
+                <div class="option">鄒主ｮｹ螳､</div>
+              </label>
+              <label class="option-wrap">
+                <input type="radio" name="biz" value="繧｢繝代Ξ繝ｫ" />
+                <div class="option">繧｢繝代Ξ繝ｫ</div>
+              </label>
+            </div>
+          </section>
+
+          <section class="question">
+            <h2>2. 諠ｳ螳壹＠縺ｦ縺・ｋ螳｢螻､縺ｯ・・/h2>
+            <div class="hint">繝｡繧､繝ｳ縺ｮ縺雁ｮ｢讒伜ワ繧偵う繝｡繝ｼ繧ｸ縺励※驕ｸ謚槭・/div>
+            <div class="options" role="radiogroup" aria-label="螳｢螻､">
+              <label class="option-wrap">
+                <input type="radio" name="aud" value="闍･閠・ />
+                <div class="option">闍･閠・/div>
+              </label>
+              <label class="option-wrap">
+                <input type="radio" name="aud" value="繝輔ぃ繝溘Μ繝ｼ" />
+                <div class="option">繝輔ぃ繝溘Μ繝ｼ</div>
+              </label>
+              <label class="option-wrap">
+                <input type="radio" name="aud" value="蟇瑚｣募ｱ､" />
+                <div class="option">蟇瑚｣募ｱ､</div>
+              </label>
+            </div>
+          </section>
+
+          <section class="question">
+            <h2>3. 蠎苓・縺ｮ髮ｰ蝗ｲ豌励・蟶梧悍縺ｯ・・/h2>
+            <div class="hint">繧√＊縺咏ｩｺ豌玲─縺ｫ霑代＞繧ゅ・繧帝∈謚槭・/div>
+            <div class="options" role="radiogroup" aria-label="髮ｰ蝗ｲ豌・>
+              <label class="option-wrap">
+                <input type="radio" name="mood" value="繝翫メ繝･繝ｩ繝ｫ" />
+                <div class="option">繝翫メ繝･繝ｩ繝ｫ</div>
+              </label>
+              <label class="option-wrap">
+                <input type="radio" name="mood" value="繝｢繝繝ｳ" />
+                <div class="option">繝｢繝繝ｳ</div>
+              </label>
+              <label class="option-wrap">
+                <input type="radio" name="mood" value="繧､繝ｳ繝繧ｹ繝医Μ繧｢繝ｫ" />
+                <div class="option">繧､繝ｳ繝繧ｹ繝医Μ繧｢繝ｫ</div>
+              </label>
+            </div>
+          </section>
+
+          <div class="actions">
+            <button id="submit" type="submit" disabled>險ｺ譁ｭ縺吶ｋ</button>
+            <button id="reset" type="button" class="secondary">繝ｪ繧ｻ繝・ヨ</button>
+          </div>
+
+          <section id="result" class="result" aria-live="polite"></section>
+        </form>
+
+        <footer>繧ｷ繝ｳ繝励Ν險ｭ險医・繧ｹ繝槭・譛驕ｩ蛹匁ｸ医∩</footer>
+      </main>
+    </div>
+
+    <script>
+      function buildPalette(mood, aud) {
+        const palettes = {
+          '繝翫メ繝･繝ｩ繝ｫ': { base: ['#8FB996', '#F0EAD6'], accents: { '闍･閠・: '#06b6d4', '繝輔ぃ繝溘Μ繝ｼ': '#f59e0b', '蟇瑚｣募ｱ､': '#b08900' } },
+          '繝｢繝繝ｳ': { base: ['#111827', '#e5e7eb'], accents: { '闍･閠・: '#3b82f6', '繝輔ぃ繝溘Μ繝ｼ': '#10b981', '蟇瑚｣募ｱ､': '#8b5cf6' } },
+          '繧､繝ｳ繝繧ｹ繝医Μ繧｢繝ｫ': { base: ['#2d2d2d', '#6b7280'], accents: { '闍･閠・: '#ef4444', '繝輔ぃ繝溘Μ繝ｼ': '#f59e0b', '蟇瑚｣募ｱ､': '#b08900' } },
+        };
+        const p = palettes[mood] || palettes['繝｢繝繝ｳ'];
+        const accent = p.accents[aud] || '#3b82f6';
+        return [...p.base, accent];
+      }
+
+      function materialText(mood) {
+        switch (mood) {
+          case '繝翫メ繝･繝ｩ繝ｫ':
+            return '譛ｨ逶ｮ繝ｻ繝ｪ繝阪Φ繝ｻ隕ｳ闡画､咲黄繧呈ｴｻ縺九＠縺溘ｄ繧上ｉ縺九↑遨ｺ髢・;
+          case '繧､繝ｳ繝繧ｹ繝医Μ繧｢繝ｫ':
+            return '繧ｳ繝ｳ繧ｯ繝ｪ繝ｼ繝医・繧ｹ繝√・繝ｫ繝ｻ蜿､譚舌↑縺ｩ辟｡鬪ｨ縺ｪ雉ｪ諢溘〒繝｡繝ｪ繝上Μ';
+          default:
+            return '逶ｴ邱夂噪縺ｧ繝溘ル繝槭Ν縲ゅぎ繝ｩ繧ｹ繧・Γ繧ｿ繝ｫ縲√Δ繝弱ヨ繝ｼ繝ｳ縺悟渕隱ｿ';
+        }
+      }
+
+      function audienceText(aud) {
+        switch (aud) {
+          case '闍･閠・:
+            return '蜀咏悄譏縺医☆繧九い繧ｯ繧ｻ繝ｳ繝医→蝗樣♀諤ｧ繧堤｢ｺ菫・;
+          case '繝輔ぃ繝溘Μ繝ｼ':
+            return '螳牙・繝ｻ隕矩壹＠繝ｻ繝吶ン繝ｼ繧ｫ繝ｼ蟇ｾ蠢懊・繧・▲縺溘ｊ險ｭ險・;
+          default:
+            return '邏譚舌・雉ｪ諢溘→菴咏區縲・撕縺代＆縺ｧ鬮倡ｴ壽─繧呈ｼ泌・';
+        }
+      }
+
+      function businessText(biz) {
+        switch (biz) {
+          case '繧ｫ繝輔ぉ':
+            return '繝ｬ繧ｸ蜑阪・貂区ｻ槫屓驕ｿ縺ｨ蟶ｭ縺ｮ貊槫惠繝舌Λ繝ｳ繧ｹ縲・ｦ吶ｊ縺ｨ辣ｧ蠎ｦ縺ｮ繧ｾ繝ｼ繝九Φ繧ｰ';
+          case '鄒主ｮｹ螳､':
+            return '繧ｫ繝・ヨ髱｢縺ｮ辣ｧ蠎ｦ蝮・ｸ繝ｻ繝舌ャ繧ｯ繝､繝ｼ繝牙虚邱壹・關ｽ縺｡逹縺代ｋ蠕・粋繧帝㍾隕・;
+          default:
+            return '蜈･蠎冷・隧ｦ逹竊剃ｼ夊ｨ医・蟆守ｷ壽怙驕ｩ蛹悶ゅヵ繧ｧ繧､繧ｹ繧｢繧ｦ繝磯匍蛻励→隧ｦ逹菴馴ｨ・;
+        }
+      }
+
+      function lightingText(mood, aud) {
+        if (aud === '蟇瑚｣募ｱ､') return '證冶牡蟇・ｊ縺ｮ貍碑牡諤ｧ縺ｮ鬮倥＞辣ｧ譏弱→髢捺磁蜈峨〒髯ｰ蠖ｱ繧剃ｽ懊ｋ';
+        if (mood === '繧､繝ｳ繝繧ｹ繝医Μ繧｢繝ｫ') return '繧ｹ繝昴ャ繝医→繝壹Φ繝繝ｳ繝医〒髯ｰ蠖ｱ繧剃ｽ懊ｊ縲√い繧ｯ繧ｻ繝ｳ繝医〒辟ｦ轤ｹ縺･縺・;
+        if (mood === '繝翫メ繝･繝ｩ繝ｫ') return '閾ｪ辟ｶ蜈峨ｒ豢ｻ縺九＠縺､縺､諡｡謨｣蜈我ｸｭ蠢・ょ､懊・證冶牡縺ｧ螻・ｿ・慍UP';
+        return '繝吶・繧ｹ縺ｯ蝮・ｸ縺ｪ髢捺磁蜈峨∝膚蜩√・蟶ｭ縺ｯ繧ｹ繝昴ャ繝医〒遶倶ｽ捺─繧剃ｻ倅ｸ・;
+      }
+
+      function audienceTag(aud) {
+        return aud === '闍･閠・ ? '闍･閠・髄縺・ : aud === '繝輔ぃ繝溘Μ繝ｼ' ? '繝輔ぃ繝溘Μ繝ｼ蜷代￠' : '蟇瑚｣募ｱ､蜷代￠';
+      }
+
+      function toChip(hex) {

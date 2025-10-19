@@ -1,0 +1,22 @@
+# 一時ファイル
+*.tmp
+temp_*.txt
+
+# OS生成ファイル
+.DS_Store
+Thumbs.db
+
+# エディタ設定
+.vscode/
+.idea/
+
+# ログファイル
+*.log
+
+# 依存関係
+node_modules/
+npm-debug.log*
+
+# ビルド出力
+dist/
+build/

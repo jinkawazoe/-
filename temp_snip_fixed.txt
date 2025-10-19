@@ -1,0 +1,28 @@
+          const r2 = extras[Math.floor(Math.random()*extras.length)];
+          return `${baseMood}, ${baseBiz}, ${r1}, ${r2}`;
+        }
+
+        async function setHero(sel){
+          const img=document.getElementById('hero-img'); const a=document.getElementById('hero-link'); if(!img) return;
+          // Try Unsplash API first, then Pixabay, then Unsplash Source.
+          let picked = '';
+          try{
+            const q = heroQueryFromSel(sel);
+            let list = await fetchUnsplashForQuery(q, 8);
+            if(!list || !list.length){ list = await fetchPixabayForQuery(q, 8); }
+            if(list && list.length){ picked = list[Math.floor(Math.random()*list.length)]; }
+          }catch(e){ picked=''; }
+          if(!picked){ picked = heroUrl(sel); }
+          img.src = picked;
+          if(a){
+            const mapSearch = { 'カフェ': 'cafe+interior+architecture+minimal', '美容室': 'hair+salon+interior+architecture+minimal', 'アパレル': 'retail+boutique+interior+architecture+minimal' };
+            const q = mapSearch[sel?.biz] || 'retail+interior+architecture+minimal';
+            a.href = `https://unsplash.com/s/photos/${q}`;
+          }
+        }
+
+        function toneToPixabayColor(tone){
+          if(tone==='モノトーン') return 'grayscale';
+          if(tone==='寒色') return 'blue';
+          if(tone==='暖色') return 'orange';
+

@@ -1,0 +1,687 @@
+﻿<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>店舗デザインタイプ診断</title>
+    <meta name="description" content="業種・客層・テイストから最適な店舗デザインタイプを診断。素材・照明・レイアウトまで建築家視点で提案。" />
+    <meta property="og:title" content="店舗デザインタイプ診断" />
+    <meta property="og:description" content="業種・客層・テイストから最適な店舗デザインタイプを診断。素材・照明・レイアウトまで建築家視点で提案。" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://source.unsplash.com/1200x630/?retail,interior,architecture,minimal" />
+    <meta name="theme-color" content="#111111" />
+    <link rel="manifest" href="manifest.json" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+    <style>
+      :root { --bg:#f7f7f9; --card:#ffffff; --ink:#0f172a; --muted:#6b7280; --line:#e5e7eb; --accent:#111; --radius:12px; --shadow:0 1px 2px rgba(0,0,0,.06); }
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{margin:0;font-family:Inter,-apple-system,system-ui,Segoe UI,Roboto,"Hiragino Sans","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+      .container{max-width:1080px;margin:0 auto;padding:20px 16px 80px}
+      header{margin:0 0 12px}
+      .hero{position:relative;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--card);box-shadow:var(--shadow)}
+      .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,.5) 80%);pointer-events:none}
+      .hero a{display:block}
+      .hero img{display:block;width:100%;aspect-ratio:21/9;object-fit:cover}
+      .hero-title{position:absolute;left:16px;bottom:16px;color:#fff;backdrop-filter:saturate(140%) blur(2px);padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);max-width:min(92%,920px)}
+      .hero-title .en{font-size:1rem;letter-spacing:.12em;text-transform:uppercase;opacity:.95}
+      .hero-title .jp{font-size:1.3rem;font-weight:800;letter-spacing:.02em;margin-top:2px}
+      .hero-title .sub{font-size:.9rem;opacity:.9;margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+      .switch{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font-size:.85rem}
+      .switch input{accent-color:#111}
+      select.mode{border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff}
+      .progress{position:sticky;top:0;z-index:5;padding-top:10px}
+      .bar{height:4px;background:var(--line);border-radius:999px;overflow:hidden}
+      .bar-inner{height:100%;width:0%;background:var(--accent);border-radius:999px;transition:width .25s ease}
+      .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+      .stack{display:grid;gap:16px}
+      .question{border:1px solid var(--line);border-radius:10px;background:#fff;padding:12px}
+      .question h2{font-size:1.02rem;margin:0 0 8px}
+      .hint{color:var(--muted);font-size:.9rem;margin-bottom:8px}
+      .question.error{border-left:3px solid #ef4444;padding-left:12px}
+      .question.error .hint::after{content:'（未選択です）';color:#ef4444;margin-left:4px}
+      .options{display:grid;gap:10px;grid-template-columns:repeat(3,minmax(0,1fr))}
+      @media (max-width:720px){.options{grid-template-columns:1fr}}
+      .option-wrap{position:relative}
+      .option-wrap input[type=radio]{position:absolute;inset:0;opacity:0}
+      .option{display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:10px;padding:12px;min-height:46px;background:#fff;font-weight:600;transition:.2s border-color,.2s background,.02s transform}
+      .option:hover{border-color:#111}
+      .option:active{transform:scale(.996)}
+      .option-wrap input:checked+.option{border-color:#111;background:#111;color:#fff}
+      .actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+      button{appearance:none;border:1px solid #111;background:#fff;color:#111;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer;transition:.2s background,.2s color,.02s transform;min-width:160px}
+      button:hover{background:#111;color:#fff}
+      button:active{transform:translateY(1px)}
+      button.secondary{border-color:var(--line);color:var(--ink)}
+      button[disabled]{opacity:.6;cursor:not-allowed}
+      .result{display:none;border-top:1px solid var(--line);padding-top:12px}
+      .badge{display:inline-block;border:1px solid #111;border-radius:999px;padding:6px 10px;font-size:.82rem;font-weight:700}
+      .subtitle{color:var(--muted);margin:6px 0 0}
+      .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+      .tag{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;font-size:.8rem}
+      .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+      @media (max-width:720px){.board{grid-template-columns:1fr 1fr}}
+      .tile{border:1px solid var(--line);border-radius:10px;background:#fff;padding:12px}
+      .tile-title{color:var(--muted);font-size:.82rem;margin:0 0 6px}
+      .tile-body{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+      .chip{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Noto Sans Mono",monospace;font-size:.85rem}
+      .sw{width:20px;height:20px;border-radius:4px;border:1px solid var(--line);display:inline-block}
+      .meter{height:8px;background:#eef2f7;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+      .meter > span{display:block;height:100%;background:linear-gradient(90deg,#0ea5e9,#6366f1);}
+      .gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+      @media (max-width:720px){.gallery{grid-template-columns:1fr 1fr}}
+      .gi{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;min-height:120px;display:block}
+      .gi img{display:block;width:100%;height:100%;object-fit:cover;aspect-ratio:16/10}
+      .fav-btn{position:absolute;right:6px;top:6px;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:.8rem;cursor:pointer}
+      .notice{color:var(--muted);font-size:.9rem}
+      footer{text-align:center;color:var(--muted);font-size:.86rem;margin-top:16px}
+      .dark{--bg:#0b1020;--card:#0f162a;--ink:#e5eaf3;--muted:#98a2b3;--line:#1f2535;--accent:#e2e8f0}
+      .dark .option{background:#0f162a;color:#e5eaf3;border-color:#1f2535}
+      .dark .option:hover{border-color:#e2e8f0}
+      .dark .option-wrap input:checked+.option{background:#e2e8f0;color:#0b1020}
+      .dark .chip{background:#0b1020;color:#e5eaf3;border-color:#1f2535}
+      .dark .gi{background:#0f162a;border-color:#1f2535}
+      @media print{header,.progress,.actions,.switch,#share{display:none!important}body{background:#fff}.container{max-width:100%;padding:0 16px}.card,.tile{box-shadow:none;border-color:#ddd}.gallery{grid-template-columns:1fr 1fr 1fr}.gallery .gi:nth-child(n+7){display:none!important}}
+    </style>
+  </head>
+  <body>
+    <div class="container" id="app">
+      <header></header>
+      <section class="hero">
+        <a id="hero-link" href="https://unsplash.com/s/photos/retail+interior+architecture+minimal" target="_blank" rel="noreferrer noopener">
+          <img id="hero-img" alt="参考デザイン（店舗内装）" src="https://source.unsplash.com/1600x700/?retail,store,interior,architecture,minimal&sig=1" />
+        </a>
+        <div class="hero-title">
+          <div class="en">Store Design Diagnose</div>
+          <div class="jp">店舗デザインタイプ診断</div>
+          <div class="sub">建築家の視点で選ぶ参考ビジュアル（Click to open source）
+            <span class="switch"><input id="dm" type="checkbox" /> ダーク</span>
+            <span class="switch">モード
+              <select id="mode" class="mode"><option value="light" selected>軽量</option><option value="standard">標準</option><option value="heavy">大量</option></select>
+            </span>
+            <button id="share" class="secondary">共有</button>
+            <button id="pdf" class="secondary">PDF</button>
+          </div>
+        </div>
+      </section>
+      <main class="stack">
+        <div class="progress"><div class="bar"><div class="bar-inner" id="bar"></div></div></div>
+        <form id="form" class="card stack" autocomplete="off">
+          <section class="question"><h2>1. 業種</h2><div class="hint">該当するものを選択</div>
+            <div class="options" role="radiogroup" aria-label="業種">
+              <label class="option-wrap"><input type="radio" name="biz" value="カフェ" /><div class="option">カフェ</div></label>
+              <label class="option-wrap"><input type="radio" name="biz" value="レストラン" /><div class="option">レストラン</div></label>
+              <label class="option-wrap"><input type="radio" name="biz" value="美容室" /><div class="option">美容室</div></label>
+              <label class="option-wrap"><input type="radio" name="biz" value="アパレル" /><div class="option">アパレル</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>2. 客層</h2>
+            <div class="options" role="radiogroup" aria-label="客層">
+              <label class="option-wrap"><input type="radio" name="aud" value="若者" /><div class="option">若者</div></label>
+              <label class="option-wrap"><input type="radio" name="aud" value="ファミリー" /><div class="option">ファミリー</div></label>
+              <label class="option-wrap"><input type="radio" name="aud" value="富裕層" /><div class="option">富裕層</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>3. 雰囲気</h2>
+            <div class="options" role="radiogroup" aria-label="雰囲気">
+              <label class="option-wrap"><input type="radio" name="mood" value="ナチュラル" /><div class="option">ナチュラル</div></label>
+              <label class="option-wrap"><input type="radio" name="mood" value="モダン" /><div class="option">モダン</div></label>
+              <label class="option-wrap"><input type="radio" name="mood" value="インダストリアル" /><div class="option">インダストリアル</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>4. 予算（総額の目安）</h2>
+            <div class="options" role="radiogroup" aria-label="予算">
+              <label class="option-wrap"><input type="radio" name="budget" value="〜300万円" /><div class="option">〜300万円</div></label>
+              <label class="option-wrap"><input type="radio" name="budget" value="300〜800万円" /><div class="option">300〜800万円</div></label>
+              <label class="option-wrap"><input type="radio" name="budget" value="800〜1500万円" /><div class="option">800〜1500万円</div></label>
+              <label class="option-wrap"><input type="radio" name="budget" value="1500〜3000万円" /><div class="option">1500〜3000万円</div></label>
+              <label class="option-wrap"><input type="radio" name="budget" value="3000万円以上" /><div class="option">3000万円以上</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>5. 広さ</h2>
+            <div class="options" role="radiogroup" aria-label="広さ">
+              <label class="option-wrap"><input type="radio" name="size" value="〜20㎡" /><div class="option">〜20㎡</div></label>
+              <label class="option-wrap"><input type="radio" name="size" value="21–50㎡" /><div class="option">21–50㎡</div></label>
+              <label class="option-wrap"><input type="radio" name="size" value="51–100㎡" /><div class="option">51–100㎡</div></label>
+              <label class="option-wrap"><input type="radio" name="size" value="100㎡以上" /><div class="option">100㎡以上</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>6. ブランドの個性</h2>
+            <div class="options" role="radiogroup" aria-label="個性">
+              <label class="option-wrap"><input type="radio" name="persona" value="落ち着き" /><div class="option">落ち着き</div></label>
+              <label class="option-wrap"><input type="radio" name="persona" value="活気" /><div class="option">活気</div></label>
+              <label class="option-wrap"><input type="radio" name="persona" value="ラグジュアリー" /><div class="option">ラグジュアリー</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>7. サステナ優先度</h2>
+            <div class="options" role="radiogroup" aria-label="サステナ">
+              <label class="option-wrap"><input type="radio" name="sustain" value="低" /><div class="option">低</div></label>
+              <label class="option-wrap"><input type="radio" name="sustain" value="中" /><div class="option">中</div></label>
+              <label class="option-wrap"><input type="radio" name="sustain" value="高" /><div class="option">高</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>8. BGM/音</h2>
+            <div class="options" role="radiogroup" aria-label="BGM">
+              <label class="option-wrap"><input type="radio" name="bgm" value="落ち着いた" /><div class="option">落ち着いた</div></label>
+              <label class="option-wrap"><input type="radio" name="bgm" value="ジャズ" /><div class="option">ジャズ</div></label>
+              <label class="option-wrap"><input type="radio" name="bgm" value="ローファイ" /><div class="option">ローファイ</div></label>
+              <label class="option-wrap"><input type="radio" name="bgm" value="アップテンポ" /><div class="option">アップテンポ</div></label>
+              <label class="option-wrap"><input type="radio" name="bgm" value="環境音" /><div class="option">環境音</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>9. カラートーン</h2>
+            <div class="options" role="radiogroup" aria-label="トーン">
+              <label class="option-wrap"><input type="radio" name="tone" value="暖色" /><div class="option">暖色</div></label>
+              <label class="option-wrap"><input type="radio" name="tone" value="寒色" /><div class="option">寒色</div></label>
+              <label class="option-wrap"><input type="radio" name="tone" value="モノトーン" /><div class="option">モノトーン</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>10. レイアウト志向</h2>
+            <div class="options" role="radiogroup" aria-label="レイアウト">
+              <label class="option-wrap"><input type="radio" name="layout" value="オープン" /><div class="option">オープン</div></label>
+              <label class="option-wrap"><input type="radio" name="layout" value="半個室" /><div class="option">半個室</div></label>
+              <label class="option-wrap"><input type="radio" name="layout" value="完全個室" /><div class="option">完全個室</div></label>
+              <label class="option-wrap"><input type="radio" name="layout" value="カウンター中心" /><div class="option">カウンター中心</div></label>
+              <label class="option-wrap"><input type="radio" name="layout" value="ミックス" /><div class="option">ミックス</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>11. 見せ場の要素</h2>
+            <div class="options" role="radiogroup" aria-label="見せ場">
+              <label class="option-wrap"><input type="radio" name="focal" value="特長壁" /><div class="option">特長壁</div></label>
+              <label class="option-wrap"><input type="radio" name="focal" value="グリーン" /><div class="option">グリーン</div></label>
+              <label class="option-wrap"><input type="radio" name="focal" value="照明演出" /><div class="option">照明演出</div></label>
+              <label class="option-wrap"><input type="radio" name="focal" value="アート" /><div class="option">アート</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>12. ファサード戦略</h2>
+            <div class="options" role="radiogroup" aria-label="外観">
+              <label class="option-wrap"><input type="radio" name="facade" value="全面ガラス" /><div class="option">全面ガラス</div></label>
+              <label class="option-wrap"><input type="radio" name="facade" value="木質" /><div class="option">木質</div></label>
+              <label class="option-wrap"><input type="radio" name="facade" value="ソリッド" /><div class="option">ソリッド</div></label>
+              <label class="option-wrap"><input type="radio" name="facade" value="サイン強調" /><div class="option">サイン強調</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>13. 席構成の比率</h2><div class="hint">目安でOK（合計でなくて構いません）</div>
+            <div class="stack">
+              <label>カウンター（％）<input type="number" id="mix-counter" min="0" max="100" step="5" value="30" style="width:120px;margin-left:8px"></label>
+              <label>テーブル（％）<input type="number" id="mix-table" min="0" max="100" step="5" value="50" style="width:120px;margin-left:8px"></label>
+              <label>ソファ（％）<input type="number" id="mix-sofa" min="0" max="100" step="5" value="20" style="width:120px;margin-left:8px"></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>14. 運用（滞在/ピーク/サービス）</h2>
+            <div class="options" role="radiogroup" aria-label="滞在時間">
+              <label class="option-wrap"><input type="radio" name="dwell" value="短時間回転" /><div class="option">短時間回転</div></label>
+              <label class="option-wrap"><input type="radio" name="dwell" value="中間" /><div class="option">中間</div></label>
+              <label class="option-wrap"><input type="radio" name="dwell" value="長居歓迎" /><div class="option">長居歓迎</div></label>
+            </div>
+            <div class="options" role="radiogroup" aria-label="ピーク">
+              <label class="option-wrap"><input type="radio" name="peak" value="ピーク高め" /><div class="option">ピーク高め</div></label>
+              <label class="option-wrap"><input type="radio" name="peak" value="均等" /><div class="option">均等</div></label>
+              <label class="option-wrap"><input type="radio" name="peak" value="アイドル長め" /><div class="option">アイドル長め</div></label>
+            </div>
+            <div class="options" role="radiogroup" aria-label="サービス">
+              <label class="option-wrap"><input type="radio" name="service" value="セルフ" /><div class="option">セルフ</div></label>
+              <label class="option-wrap"><input type="radio" name="service" value="フルサービス" /><div class="option">フルサービス</div></label>
+            </div>
+          </section>
+
+          <section class="question"><h2>15. 物理条件</h2><div class="hint">概算値でOK</div>
+            <div class="stack">
+              <div>
+                <label>間口(m) <input type="number" id="bld-width" min="1" max="50" step="0.1" value="6" style="width:100px;margin-left:8px"></label>
+                <label style="margin-left:12px">奥行(m) <input type="number" id="bld-depth" min="1" max="100" step="0.1" value="10" style="width:100px;margin-left:8px"></label>
+                <label style="margin-left:12px">天井高(m) <input type="number" id="bld-height" min="2" max="6" step="0.1" value="2.8" style="width:100px;margin-left:8px"></label>
+              </div>
+              <div>
+                <label>採光方位
+                  <select id="bld-orient" style="margin-left:8px">
+                    <option>南</option><option>東</option><option>西</option><option>北</option>
+                  </select>
+                </label>
+                <label style="margin-left:12px">梁・柱の突出
+                  <select id="bld-obst" style="margin-left:8px"><option>少ない</option><option>普通</option><option>多い</option></select>
+                </label>
+              </div>
+              <div>
+                <label>電力容量
+                  <select id="bld-power" style="margin-left:8px"><option>十分</option><option>要確認</option></select>
+                </label>
+                <label style="margin-left:12px">給排気
+                  <select id="bld-hvac" style="margin-left:8px"><option>可能</option><option>要工事</option></select>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="question"><h2>16. 照明指標</h2><div class="hint">任意（わかる範囲で）</div>
+            <div class="stack">
+              <div>
+                <label>ベース照度(lx) <input type="number" id="lx-base" min="100" max="1000" step="50" value="300" style="width:100px;margin-left:8px"></label>
+                <label style="margin-left:12px">テーブル面(lx) <input type="number" id="lx-table" min="100" max="1500" step="50" value="500" style="width:100px;margin-left:8px"></label>
+              </div>
+              <div>
+                <label>演色(Ra) <input type="number" id="lx-ra" min="70" max="100" step="1" value="90" style="width:100px;margin-left:8px"></label>
+                <label style="margin-left:12px">色温(K) <input type="number" id="lx-cct" min="2700" max="5000" step="100" value="3000" style="width:100px;margin-left:8px"></label>
+              </div>
+            </div>
+          </section>
+
+          <section class="question"><h2>17. 予算配分（％）</h2><div class="hint">合計は目安（外観/内装/照明/家具/サイン）</div>
+            <div class="stack">
+              <label>外観 <input type="number" id="alloc-facade" min="0" max="100" step="5" value="10" style="width:100px;margin-left:8px"></label>
+              <label>内装 <input type="number" id="alloc-interior" min="0" max="100" step="5" value="40" style="width:100px;margin-left:8px"></label>
+              <label>照明 <input type="number" id="alloc-light" min="0" max="100" step="5" value="20" style="width:100px;margin-left:8px"></label>
+              <label>家具 <input type="number" id="alloc-furniture" min="0" max="100" step="5" value="20" style="width:100px;margin-left:8px"></label>
+              <label>サイン <input type="number" id="alloc-sign" min="0" max="100" step="5" value="10" style="width:100px;margin-left:8px"></label>
+            </div>
+          </section>
+
+          <div class="actions">
+            <button id="submit" type="submit" disabled>診断する</button>
+            <button id="reset" type="button" class="secondary">リセット</button>
+          </div>
+
+          <section id="result" class="result" aria-live="polite"></section>
+        </form>
+
+        <script>
+          const names=['biz','aud','mood','budget','size','persona','sustain','bgm','tone','layout','focal'];
+          const form=document.getElementById('form');
+          const bar=document.getElementById('bar');
+          const submitBtn=document.getElementById('submit');
+          const resetBtn=document.getElementById('reset');
+          const result=document.getElementById('result');
+          const getSel=(n)=>form.querySelector(`input[name="${n}"]:checked`)?.value;
+          const ready=()=>names.every(n=>!!getSel(n));
+          const progress=()=>{ const c=names.filter(n=>!!getSel(n)).length; const pct=Math.round((c/names.length)*100); bar.style.width=pct+'%'; submitBtn.disabled=!ready(); };
+          form.addEventListener('change', progress);
+          function showErrors(){ let first; names.forEach(n=>{ const ok=!!getSel(n); const sec=[...document.querySelectorAll('.question')].find(s=>s.querySelector(`input[name="${n}"]`)); if(sec){ sec.classList.toggle('error',!ok); if(!ok && !first) first=sec; } }); if(first){ first.scrollIntoView({behavior:'smooth',block:'center'}); } }
+          form.addEventListener('submit', async (e)=>{
+            e.preventDefault();
+            if(!ready()){ showErrors(); return; }
+            const sel = Object.fromEntries(names.map(n=>[n,getSel(n)]));
+            result.style.display='block';
+            const analysis = buildAnalysis(sel);
+            const chart = buildCapability(sel);
+            result.innerHTML = `
+              <div class="badge">診断結果</div>
+              <h3 style="margin:6px 0 4px;">${sel.mood} × ${sel.biz}（${sel.aud}｜${sel.persona}）</h3>
+              <p class="subtitle">考察</p>
+              <div class="tile" style="line-height:1.8">${analysis}</div>
+              <p class="subtitle">面積×予算の到達イメージ</p>
+              ${chart}
+              <p class="subtitle">店舗イメージ</p>
+              <div id="gallery" class="gallery"></div>
+            `;
+            window.scrollTo({top:result.offsetTop-10,behavior:'smooth'});
+            setHero(sel);
+            await renderImages(sel);
+            // 診断（下部のグラフ・所見）も最新の選択に同期
+            try { if(typeof updateDiagnosisFromForm === 'function') updateDiagnosisFromForm(); } catch(_) {}
+          });
+          resetBtn.addEventListener('click',()=>{ form.reset(); progress(); result.style.display='none'; result.innerHTML=''; document.querySelectorAll('.question.error').forEach(el=>el.classList.remove('error')); });
+          progress();
+          // 初期ヒーロー画像
+          setHero(null);
+
+          function buildAnalysis(sel){
+            const size = sel.size||''; const budget = sel.budget||''; const dwell = sel.dwell||'中間';
+            const layout = sel.layout||'オープン'; const focal = sel.focal||'特長壁'; const facade = sel.facade||'街並みに調和';
+            const persona = sel.persona||'落ち着き'; const tone = sel.tone||'中庸';
+            const mats = {
+              'ナチュラル':'木・リネン・植栽を主役にし、温度感を抑えた自然光と拡散光で柔らかくまとめる',
+              'モダン':'石・ガラス・メタルの比率を上げ、輪郭と陰影を強調したミニマル構成',
+              'インダストリアル':'コンクリ・スチール・古材の素材対比でラフさと緊張感を両立',
+              'クラシック':'木彫・真鍮・装飾モールを要所に、落ち着いた配色で格を演出',
+              '北欧':'オーク・白壁・ファブリックで明るく清潔、柔らかい陰影'
+            }[sel.mood||'モダン'];
+            const scale = {
+              '〜20㎡':'スモールスケール。席数は限られ、動線の明快さと多機能什器が鍵',
+              '21–50㎡':'ミニマムなゾーニングが可能。視線の抜けと回遊性を両立',
+              '51–100㎡':'回遊と席種のバリエーションを確保。フォーカルと滞在のリズムづくりが重要',
+              '100㎡以上':'明確なゾーン計画と象徴的な見せ場を複数配置'
+            }[size]||'';
+            const invest = {
+              '〜300万円':'既存活用＋塗装・シート中心。照明はベース更新と最小限のスポットで演出',
+              '300〜800万円':'仕上げ一新の範囲を限定し、カウンターや特長壁に重点投資',
+              '800〜1500万円':'仕上げ・照明・什器をバランス良く更新。ファサードにも介入可',
+              '1500〜3000万円':'造作什器や石・金物など素材の格上げ。照明制御も導入',
+              '3000万円以上':'全面刷新を前提に、素材・納まり・演出まで統合的に設計'
+            }[budget]||'';
+            const peak = sel.peak||'均等'; const service = sel.service||'セルフ';
+            const flow = `レイアウトは${layout}、見せ場は${focal}を軸に、外観は${facade}でブランドの第一印象を定義。滞在は${dwell}想定、ピークは${peak}、サービスは${service}。席ピッチと通路幅を調整。`;
+            const dims = (()=>{ const w=parseFloat(document.getElementById('bld-width')?.value||'0'); const d=parseFloat(document.getElementById('bld-depth')?.value||'0'); const h=parseFloat(document.getElementById('bld-height')?.value||'0'); if(w&&d&&h){ return `参考寸法：間口${w}m × 奥行${d}m、天井高${h}m。`; } return ''; })();
+            const light = (()=>{ const lx=document.getElementById('lx-base')?.value, tx=document.getElementById('lx-table')?.value, ra=document.getElementById('lx-ra')?.value, cct=document.getElementById('lx-cct')?.value; return lx? `照明指標：ベース${lx}lx・テーブル${tx}lx、Ra${ra}・${cct}K。` : ''; })();
+            return `
+              ${sel.mood}志向の素材計画：${mats}。${flow}
+              ${dims}規模感：${scale}。投資の考え方：${invest}。${light}
+              ${tone}トーンと${persona}な印象を崩さず、サイン・什器・照明の三位一体でブランドらしさを増幅させます。`;
+          }
+
+          function buildCapability(sel){
+            const sizeScore = sel.size==='〜20㎡'?1: sel.size==='21–50㎡'?2: sel.size==='51–100㎡'?3:4;
+            const budgetScore = sel.budget==='〜300万円'?1: sel.budget==='300〜800万円'?2: sel.budget==='800〜1500万円'?3: sel.budget==='1500〜3000万円'?4:5;
+            const level = (a)=> Math.max(1, Math.min(5, Math.round((sizeScore+budgetScore)/2 + a)));
+            const items = [
+              {label:'外観', val: level(-1)},
+              {label:'内装仕上', val: level(0)},
+              {label:'照明', val: level(0)},
+              {label:'家具什器', val: level(-0.5)},
+              {label:'サイン', val: level(-0.5)}
+            ];
+            const bars = items.map(it=>`<div><div style="display:flex;justify-content:space-between;"><span>${it.label}</span><span>${it.val}/5</span></div><div class="meter"><span style="width:${it.val*20}%"></span></div></div>`).join('');
+            return `<div class="tile">${bars}</div>`;
+          }
+
+          function heroQuery(sel){
+            const mood = sel?.mood==='インダストリアル'?'industrial loft interior': sel?.mood==='ナチュラル'?'natural wood interior': sel?.mood==='クラシック'?'classic interior architecture': sel?.mood==='北欧'?'scandinavian interior minimal':'modern minimal interior';
+            const biz = sel?.biz==='カフェ'?'cafe interior': sel?.biz==='レストラン'?'restaurant interior': sel?.biz==='美容室'?'hair salon interior': sel?.biz==='アパレル'?'retail boutique interior':'retail store interior';
+            // 室内限定（interior/indoor/inside/room）に固定
+            return `${mood}, ${biz}, commercial interior design, interior architecture, architect-designed, interior, indoor, inside, room, minimal, clean lines, no people`;
+          }
+          function setHero(sel){
+            const img=document.getElementById('hero-img'); const a=document.getElementById('hero-link'); if(!img) return;
+            const q = heroQuery(sel||{});
+            const primary = `https://source.unsplash.com/1600x700/?${encodeURIComponent(q)}&sig=${Math.random()*1e6|0}`;
+            const alt1 = `https://source.unsplash.com/1600x700/?architecture,interior,retail,minimal,clean%20lines,no%20people&sig=${Math.random()*1e6|0}`;
+            const alt2 = `https://picsum.photos/1600/700?random=${Math.random()*1e6|0}`;
+            trySetImage(img, [primary, alt1, alt2]);
+            if(a) a.href = `https://unsplash.com/s/photos/${encodeURIComponent(q.replace(/,\s*/g,'+'))}`;
+          }
+          function trySetImage(img, list){ let i=0; const loadNext=()=>{ if(i>=list.length){ return; } img.src=list[i++]; }; img.onerror=loadNext; loadNext(); }
+          function buildQueries(sel){
+            const base = 'commercial interior design, interior architecture, architect-designed, interior, indoor, inside, room, minimal, clean lines, no people';
+            const mood = sel.mood==='インダストリアル'?'industrial loft interior': sel.mood==='ナチュラル'?'natural wood interior': sel.mood==='クラシック'?'classic interior architecture': sel.mood==='北欧'?'scandinavian interior minimal':'modern minimal interior';
+            const biz = sel.biz==='カフェ'?'cafe interior': sel.biz==='レストラン'?'restaurant interior': sel.biz==='美容室'?'hair salon interior': sel.biz==='アパレル'?'retail boutique interior':'retail store interior';
+            const layout = sel.layout==='オープン'?'open plan layout': sel.layout==='半個室'?'booth seating layout': sel.layout==='完全個室'?'private room layout': sel.layout==='カウンター中心'?'counter seating layout':'mixed layout';
+            const focal = sel.focal==='特長壁'?'feature wall interior retail': sel.focal==='グリーン'?'indoor plants display interior retail': sel.focal==='照明演出'?'statement lighting interior retail': sel.focal==='アート'?'art display wall interior retail':'focal point interior retail';
+            const tone = sel.tone==='暖色'?'warm lighting': sel.tone==='寒色'?'cool lighting': sel.tone==='モノトーン'?'black and white interior':'';
+            const arr = [
+              `${mood}, ${biz}, ${base}`,
+              `${biz}, ${layout}, ${base}`,
+              `${biz}, ${focal}, ${base}`,
+              `${biz}, ${tone}, ${base}`,
+              `${mood}, seating area interior retail, ${base}`,
+              `${mood}, counter, service counter, ${base}`,
+              `${mood}, display fixtures, merchandising, ${base}`,
+              `${mood}, aisle circulation, wayfinding, ${base}`,
+              `${mood}, cash wrap, ${base}`,
+              `${mood}, wall washer lighting, ${base}`,
+              `${mood}, pendant lights, ${base}`,
+              `${mood}, track lighting aisle, ${base}`,
+              `${mood}, wood stone metal texture interior, ${base}`,
+              `${mood}, material board, finish board, ${base}`
+            ];
+            return Array.from(new Set(arr.filter(Boolean)));
+          }
+          async function renderImages(sel){
+            const grid=document.getElementById('gallery'); if(!grid) return; grid.innerHTML='';
+            const qs = buildQueries(sel);
+            const set = new Set();
+            for(let i=0;i<qs.length && set.size<24;i++){
+              set.add(`https://source.unsplash.com/800x600/?${encodeURIComponent(qs[i])}&sig=${Math.random()*1e6|0}`);
+            }
+            while(set.size<12){ set.add(`https://source.unsplash.com/800x600/?interior,architecture,retail,minimal,no%20people&sig=${Math.random()*1e6|0}`); }
+            [...set].forEach(u=>{ const a=document.createElement('a'); a.href=u; a.target='_blank'; a.rel='noreferrer noopener'; a.className='gi'; const img=new Image(); img.loading='lazy'; img.referrerPolicy='no-referrer'; a.appendChild(img); const alt1=`https://source.unsplash.com/800x600/?architecture,interior,retail,minimal,clean%20lines,no%20people&sig=${Math.random()*1e6|0}`; const alt2=`https://picsum.photos/800/600?random=${Math.random()*1e6|0}`; trySetImage(img, [u, alt1, alt2]); grid.appendChild(a); });
+          }
+        </script>
+        
+        <!-- 診断結果（予算別：金額入りグラフ＋所見） -->
+        <section class="card" id="diagnosis" style="margin-top:16px">
+          <h2 style="margin:0 0 8px">診断結果</h2>
+          <div class="stack">
+            <div id="summary" class="hint">予算を選択すると結果を表示します。</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:start">
+              <div>
+                <h3 style="margin:0 0 6px">予算配分</h3>
+                <canvas id="budgetChart" width="420" height="240"></canvas>
+                <div id="budgetNote" class="hint" style="margin-top:6px"></div>
+                <table style="margin-top:8px; width:100%; border-collapse:collapse">
+                  <thead>
+                    <tr>
+                      <th style="text-align:left; border-bottom:1px solid var(--line)">カテゴリ</th>
+                      <th style="text-align:right; border-bottom:1px solid var(--line)">金額</th>
+                      <th style="text-align:right; border-bottom:1px solid var(--line)">構成比</th>
+                    </tr>
+                  </thead>
+                  <tbody id="allocBody"></tbody>
+                  <tfoot>
+                    <tr>
+                      <td>合計</td>
+                      <td id="budgetTotal" style="text-align:right"></td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div>
+                <h3 style="margin:0 0 6px">期待効果</h3>
+                <canvas id="effectChart" width="420" height="260"></canvas>
+                <div id="effectNote" class="hint" style="margin-top:6px"></div>
+              </div>
+            </div>
+            <div>
+              <h3 style="margin:4px 0 6px">診断項目の所見</h3>
+              <div id="findings" class="stack"></div>
+            </div>
+          </div>
+        </section>
+
+        <script>
+          // 金額フォーマッタ
+          const JPY = new Intl.NumberFormat('ja-JP', { style:'currency', currency:'JPY', maximumFractionDigits:0 });
+
+          // 予算シナリオ定義
+          const SCENARIOS = {
+            low: {
+              label: '低予算',
+              budget: 3_000_000,
+              allocations: [
+                { key:'facade', label:'外観/サイン', amount: 450_000, color:'#4F46E5' },
+                { key:'lighting', label:'照明', amount: 600_000, color:'#22C55E' },
+                { key:'fixtures', label:'什器', amount: 900_000, color:'#06B6D4' },
+                { key:'ops', label:'運用/小改修', amount: 600_000, color:'#F59E0B' },
+                { key:'other', label:'その他', amount: 450_000, color:'#EF4444' }
+              ],
+              effects: { savings: 1_200_000, uplift: 1_000_000, extra_cost: -400_000 },
+              findings: [
+                {
+                  title:'コスト効率', grade:'要改善',
+                  meaning:'広告・販促に対して得られる成果の効率。主な指標は CPC/CPA/ROAS。低CPC・低CPA・高ROASほど同じ投資で成果が出る状態を示す。',
+                  basis:'既存CPCが目標比+15%、CVR 2.1%→2.3%見込み',
+                  impact: 2_200_000, action:'クリエイティブAB／入札最適化でCPC▲10%',
+                  risk:'媒体在庫変動で効果遅延（最大▲¥0.4M）'
+                },
+                {
+                  title:'UX/回遊', grade:'中',
+                  meaning:'体験品質と回遊行動の良否。LCP/CLS/離脱率/回遊率/滞在時間などで把握。改善はCVRや客単価の押上げに直結。',
+                  basis:'商品詳細離脱+5.8pt、LCP 3.4s',
+                  impact: 1_000_000, action:'LCP 2.5s狙い＋在庫可視化',
+                  risk:'旧端末での描画差（対策: 画像最適化）'
+                }
+              ]
+            },
+            mid: {
+              label: '中予算',
+              budget: 8_000_000,
+              allocations: [
+                { key:'facade', label:'外観/サイン', amount: 1_200_000, color:'#4F46E5' },
+                { key:'lighting', label:'照明', amount: 1_600_000, color:'#22C55E' },
+                { key:'fixtures', label:'什器', amount: 2_600_000, color:'#06B6D4' },
+                { key:'ops', label:'運用/自動化', amount: 1_600_000, color:'#F59E0B' },
+                { key:'other', label:'その他', amount: 1_000_000, color:'#EF4444' }
+              ],
+              effects: { savings: 3_200_000, uplift: 2_800_000, extra_cost: -900_000 },
+              findings: [
+                { title:'ROI/回収', grade:'良', meaning:'投資効率を示す指標。ROI=利益/投資額、回収期間=投資額/年間純効果。高ROI・短回収ほど資金効率が良い。', basis:'初期¥8.0M＋運用¥1.2M/年', impact: 9_500_000, action:'AB最適化＋自動在庫連携で効率化', risk:'外部API制限（キュー＋キャッシュ）' },
+                { title:'体制/実行', grade:'中', meaning:'必要人月・スキル・外部委託可否など実行力の充足度。リードタイムやボトルネックが費用対効果に影響。', basis:'専任0.4人月不足', impact: -600_000, action:'初月外部リソース導入→2ヶ月で内製移行', risk:'人員アサイン遅延' },
+                { title:'品質/UX', grade:'要改善', meaning:'速度・安定性・視覚安定性といったデジタル品質と体験の総合。LCP/CLS/TTFB/離脱率などを総合評価。', basis:'LCP 3.2s→2.4s目標', impact: 3_000_000, action:'画像CDN＋遅延読込', risk:'一時的CLS増（段階導入）' }
+              ]
+            },
+            high: {
+              label: '高予算',
+              budget: 20_000_000,
+              allocations: [
+                { key:'facade', label:'外観/サイン', amount: 3_000_000, color:'#4F46E5' },
+                { key:'lighting', label:'照明', amount: 3_400_000, color:'#22C55E' },
+                { key:'fixtures', label:'什器', amount: 6_800_000, color:'#06B6D4' },
+                { key:'ops', label:'基盤/自動化', amount: 4_000_000, color:'#F59E0B' },
+                { key:'other', label:'コンティンジェンシー', amount: 2_800_000, color:'#EF4444' }
+              ],
+              effects: { savings: 6_000_000, uplift: 9_000_000, extra_cost: -2_500_000 },
+              findings: [
+                { title:'体験刷新', grade:'高', meaning:'空間体験全体の再設計。ゾーニング/動線/素材/照明/音/サインの統合最適化で滞在・購買行動を変える。', basis:'ゾーニング再設計＋素材刷新', impact: 12_000_000, action:'動線最適化と滞留面積の再配分', risk:'改装休業で一時機会損失（段階工事）' },
+                { title:'基盤投資', grade:'適', meaning:'在庫・POS・顧客・行動データの統合基盤（DWH/ETL/BI）。意思決定の速度・精度向上と自動化の基盤。', basis:'在庫・POS・分析の統合', impact: 5_000_000, action:'DWH＋ダッシュボード整備', risk:'データ品質（監視＋スキーマ契約）' },
+                { title:'セキュリティ', grade:'適', meaning:'機密性・完全性・可用性の確保。個人データのライフサイクル管理、権限/監査、暗号化、ログ保全など。', basis:'保持期間の見直し', impact: 8_000_000, action:'ライフサイクル削除の自動化', risk:'運用フロー変更の教育コスト' }
+              ]
+            }
+          };
+
+          let budgetChart, effectChart;
+
+          function renderScenario(key){
+            const sc = SCENARIOS[key] || SCENARIOS.low;
+            const total = sc.budget;
+            const allocations = sc.allocations;
+
+            // サマリー
+            const net = sc.effects.savings + sc.effects.uplift + sc.effects.extra_cost;
+            const months = Math.max(1, Math.round((total) / Math.max(1, net) * 12));
+            document.getElementById('summary').textContent = `総予算 ${JPY.format(total)}。配分は ${allocations.map(a=>a.label).join(' / ')}。純効果は約 ${JPY.format(net)}（回収 ${months} ヶ月想定）。`;
+
+            // 表
+            document.getElementById('budgetTotal').textContent = JPY.format(total);
+            const tbody = document.getElementById('allocBody');
+            tbody.innerHTML = '';
+            allocations.forEach(a=>{
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td>${a.label}</td><td style="text-align:right">${JPY.format(a.amount)}</td><td style="text-align:right">${Math.round(a.amount/total*100)}%</td>`;
+              tbody.appendChild(tr);
+            });
+
+            // 予算配分チャート
+            const budgetNote = document.getElementById('budgetNote');
+            budgetNote.textContent = '';
+            try{
+              if(typeof Chart === 'undefined') throw new Error('ChartJSUnavailable');
+              const ctx1 = document.getElementById('budgetChart').getContext('2d');
+              if(budgetChart){ budgetChart.destroy(); }
+              budgetChart = new Chart(ctx1, {
+                type:'doughnut',
+                data:{
+                  labels: allocations.map(a=>`${a.label} ${JPY.format(a.amount)}`),
+                  datasets:[{ data: allocations.map(a=>a.amount), backgroundColor: allocations.map(a=>a.color), borderWidth:0 }]
+                },
+                options:{
+                  cutout:'60%',
+                  plugins:{
+                    legend:{ position:'bottom' },
+                    title:{ display:true, text:`予算配分 合計 ${JPY.format(total)}` },
+                    tooltip:{ callbacks:{ label:(ctx)=>`${ctx.label}: ${Math.round(ctx.raw/total*100)}%` } }
+                  }
+                }
+              });
+            } catch(e){
+              budgetNote.textContent = 'グラフはオフライン/ブロックのため一時的に非表示（Chart.js未読込）';
+            }
+
+            // 効果チャート（ウォーターフォール風）
+            const effectData = [
+              { label:'コスト削減', value: sc.effects.savings, color:'#22C55E' },
+              { label:'売上押上げ', value: sc.effects.uplift, color:'#22C55E' },
+              { label:'追加コスト', value: sc.effects.extra_cost, color:'#EF4444' },
+              { label:'ネット効果', value: net, color:'#3B82F6' },
+            ];
+            const effectNote = document.getElementById('effectNote');
+            effectNote.textContent = '';
+            try{
+              if(typeof Chart === 'undefined') throw new Error('ChartJSUnavailable');
+              const ctx2 = document.getElementById('effectChart').getContext('2d');
+              if(effectChart){ effectChart.destroy(); }
+              effectChart = new Chart(ctx2, {
+                type:'bar',
+                data:{ labels: effectData.map(e=>e.label), datasets:[{ data: effectData.map(e=>e.value), backgroundColor: effectData.map(e=>e.color) }] },
+                options:{
+                  plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:(c)=>`${c.label}: ${JPY.format(c.raw)}` } }, title:{ display:true, text:`期待ネット効果 ${JPY.format(net)}` } },
+                  scales:{ y:{ ticks:{ callback:v=>JPY.format(v) } } }
+                }
+              });
+              effectNote.textContent = `内訳: 削減 ${JPY.format(sc.effects.savings)} / 押上げ ${JPY.format(sc.effects.uplift)} / 追加 ${JPY.format(Math.abs(sc.effects.extra_cost))}`;
+            } catch(e){
+              effectNote.textContent = '効果グラフはオフライン/ブロックのため一時的に非表示（Chart.js未読込）';
+            }
+
+            // 所見
+            const findings = document.getElementById('findings');
+            findings.innerHTML = '';
+            sc.findings.forEach(f=>{
+              const div = document.createElement('div');
+              div.className = 'question';
+              div.innerHTML = `
+                <div><strong>【${f.title}: ${f.grade}】</strong></div>
+                <div>指標の意味: ${f.meaning||''}</div>
+                <div class="hint">根拠: ${f.basis}</div>
+                <div>影響: ${JPY.format(f.impact)}/年</div>
+                <div>対応: ${f.action}</div>
+                <div class="hint">リスク: ${f.risk}</div>
+              `;
+              findings.appendChild(div);
+            });
+          }
+
+          // 予算（設問4）からシナリオキーへ変換
+          function budgetKeyFromValue(v){
+            switch(v){
+              case '〜300万円': return 'low';
+              case '300〜800万円': return 'low';
+              case '800〜1500万円': return 'mid';
+              case '1500〜3000万円': return 'mid';
+              case '3000万円以上': return 'high';
+              default: return null;
+            }
+          }
+          function currentBudgetKey(){
+            const el = document.querySelector('input[name="budget"]:checked');
+            return el ? budgetKeyFromValue(el.value) : null;
+          }
+          function clearDiagnosis(){
+            try{ if(budgetChart){ budgetChart.destroy(); budgetChart=null; } }catch(e){}
+            try{ if(effectChart){ effectChart.destroy(); effectChart=null; } }catch(e){}
+            const tbody = document.getElementById('allocBody'); if(tbody) tbody.innerHTML='';
+            const sum = document.getElementById('summary'); if(sum) sum.textContent='予算を選択すると結果を表示します。';
+            const total = document.getElementById('budgetTotal'); if(total) total.textContent='';
+            const bnote = document.getElementById('budgetNote'); if(bnote) bnote.textContent='';
+            const note = document.getElementById('effectNote'); if(note) note.textContent='';
+            const findings = document.getElementById('findings'); if(findings) findings.innerHTML='';
+          }
+          function updateDiagnosisFromForm(){
+            const key = currentBudgetKey();
+            if(key){ renderScenario(key); } else { clearDiagnosis(); }
+          }
+          // 初期化（フォームの選択に追従）
+          (function initDiagnosis(){
+            const frm = document.getElementById('form');
+            if(frm){
+              frm.addEventListener('change', updateDiagnosisFromForm);
+              frm.addEventListener('reset', ()=> setTimeout(clearDiagnosis, 0));
+            }
+            updateDiagnosisFromForm();
+          })();
+        </script>
+      </main>
+    </div>
+  </body>
+</html>
