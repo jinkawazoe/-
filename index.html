@@ -102,6 +102,15 @@
         /* Prevent table overflow within diagnosis card */
         #diagnosis{overflow-x:auto}
       }
+      /* iPhone/small width: take taller hero height so title fits */
+      @media (max-width:480px){
+        .hero{aspect-ratio:auto}
+        .hero::after{padding-top:62%}
+        .hero-title{left:12px;bottom:12px;max-width:94%}
+      }
+      @media (max-width:360px){
+        .hero::after{padding-top:68%}
+      }
     </style>
   </head>
   <body>
